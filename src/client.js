@@ -19,7 +19,7 @@ return {
         offTitle: '系统通知已关闭,点击开启',
         allowTitle: '点击授权系统通知(离开页面时提醒)',
         blockedTitle: '浏览器已阻止通知,请在浏览器设置中允许',
-        hintToast: '离开期间有回合完成。点击侧边栏底部的系统通知按钮开启,离开也能收到提醒',
+        hintToast: '离开期间有回合完成。点击输入框左侧的系统通知按钮开启,离开也能收到提醒',
         muteLabel: '静音', mutedLabel: '已静音',
         bellOnTitle: '通知开启,点击静音', bellOffTitle: '通知已静音,点击恢复',
         bellOnAria: '静音通知', bellOffAria: '恢复通知',
@@ -36,7 +36,7 @@ return {
         offTitle: 'System notifications off, click to turn on',
         allowTitle: 'Click to allow system notifications (alerts when you leave the page)',
         blockedTitle: 'Notifications are blocked by the browser; allow them in browser settings',
-        hintToast: 'A turn completed while you were away. Enable system notifications from the sidebar button',
+        hintToast: 'A turn completed while you were away. Enable system notifications from the input-row button',
         muteLabel: 'Mute', mutedLabel: 'Muted',
         bellOnTitle: 'Notifications on, click to mute', bellOffTitle: 'Muted, click to unmute',
         bellOnAria: 'Mute notifications', bellOffAria: 'Unmute notifications',
@@ -105,31 +105,20 @@ return {
       @media (max-width: 1480px) {
         .ln-live-root { bottom: 150px; right: 16px; }
       }
-      /* Sidebar footer actions (match the shipped Cordis panel badge). */
-      .ln-side-btn {
-        display: inline-flex; align-items: center; gap: 8px; width: 100%; height: 49px;
-        padding: 0 8px 0 6px; border: none; border-radius: 12px; background: transparent;
-        color: var(--dsw-alias-label-primary, #e6e9ef); font-family: inherit; font-size: 14px;
-        cursor: pointer; overflow: hidden;
+      /* Input-row controls (inside the composer tool row). */
+      .ln-in-row { display: inline-flex; align-items: center; gap: 2px; }
+      .ln-in-btn {
+        position: relative; display: inline-flex; align-items: center; justify-content: center;
+        width: 30px; height: 30px; padding: 0; border: none; border-radius: 999px;
+        background: transparent; color: var(--dsw-alias-label-tertiary, #9aa3b2); cursor: pointer; font-size: 14px;
       }
-      .ln-side-btn:hover { background: var(--dsw-alias-interactive-bg-hover-solid, rgba(0,0,0,0.05)); }
-      .ln-side-icon { flex: none; position: relative; display: grid; place-items: center; font-size: 15px; }
-      .ln-side-dot { position: absolute; top: -2px; right: -4px; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--dsw-alias-bg-base, #fff); background: transparent; }
-      .ln-side-btn-on .ln-side-dot { background: var(--dsw-alias-state-success-primary, #7ee2a8); }
-      .ln-side-btn-off .ln-side-dot { background: var(--dsw-alias-state-error-primary, #ff7b7b); }
-      .ln-side-btn-warn .ln-side-dot { background: var(--dsw-alias-state-warn-primary, #e8b86d); }
-      .ln-side-btn-blocked .ln-side-dot { background: var(--dsw-alias-state-error-primary, #ff7b7b); }
-      .ln-side-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .ln-side-state { flex: none; margin-left: auto; color: var(--dsw-alias-label-tertiary, #9aa3b2); font-size: 12px; line-height: 16px; }
-      .ln-side-btn-muted { color: var(--dsw-alias-state-warn-primary, #e8b86d); }
-      .ln-side-circle {
-        display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
-        padding: 0; border: none; border-radius: 50%; background: transparent;
-        color: var(--dsw-alias-label-primary, #e6e9ef); cursor: pointer; position: relative; font-size: 15px;
-      }
-      .ln-side-circle:hover { background: var(--dsw-alias-interactive-bg-hover-solid, rgba(0,0,0,0.05)); }
-      .ln-side-circle .ln-side-dot { top: 1px; right: 1px; border-color: var(--dsw-alias-bg-base, #fff); }
-      .ln-side-circle.ln-side-btn-muted { color: var(--dsw-alias-state-warn-primary, #e8b86d); }
+      .ln-in-btn:hover { background: var(--dsw-alias-interactive-bg-hover, rgba(38,49,72,0.06)); color: var(--dsw-alias-label-primary, #e6e9ef); }
+      .ln-in-dot { position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--dsw-specific-input-major, #fff); background: transparent; }
+      .ln-in-btn-on .ln-in-dot { background: var(--dsw-alias-state-success-primary, #7ee2a8); }
+      .ln-in-btn-off .ln-in-dot { background: var(--dsw-alias-state-error-primary, #ff7b7b); }
+      .ln-in-btn-warn .ln-in-dot { background: var(--dsw-alias-state-warn-primary, #e8b86d); }
+      .ln-in-btn-blocked .ln-in-dot { background: var(--dsw-alias-state-error-primary, #ff7b7b); }
+      .ln-in-btn-muted { color: var(--dsw-alias-state-warn-primary, #e8b86d); }
     `)
 
     let currentSessionId
@@ -443,116 +432,94 @@ return {
       },
     ))
 
-    slots.inject('sidebar.footer.action', () => slots.register(
-      { name: 'sidebar.footer.action', id: 'live-notify-sys', order: 10, label: () => T().sysLabel },
-      function SysButton(props) {
-        const wide = props !== undefined && props.wide === true
-        const [tick, setTick] = React.useState(0)
-        const [sys, setSys] = React.useState({
-          status: typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
-          enabled: typeof Notification !== 'undefined' && Notification.permission === 'granted',
+    slots.inject('conversation.input.left', () => slots.register(
+      { name: 'conversation.input.left', id: 'live-notify-controls', order: 0, label: () => T().sysLabel },
+      function Controls() {
+        return React.createElement('div', { className: 'ln-in-row' },
+          React.createElement(SysInButton, null),
+          React.createElement(MuteInButton, null),
+        )
+      },
+    ))
+
+    function SysInButton() {
+      const [tick, setTick] = React.useState(0)
+      const [sys, setSys] = React.useState({
+        status: typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
+        enabled: typeof Notification !== 'undefined' && Notification.permission === 'granted',
+      })
+      const t = T()
+      if (tick >= 0) { /* locale changed */ }
+      React.useEffect(function () {
+        const setter = function () { setTick(function (x) { return x + 1 }) }
+        langSetters.push(setter)
+        sysClickHandler = onSysClick
+        return function () {
+          const idx = langSetters.indexOf(setter)
+          if (idx >= 0) langSetters.splice(idx, 1)
+          sysClickHandler = null
+        }
+      }, [])
+
+      function onSysClick() {
+        if (typeof Notification === 'undefined') return
+        if (Notification.permission === 'granted') {
+          setSys(function (s) { return Object.assign({}, s, { enabled: !s.enabled }) })
+          return
+        }
+        if (Notification.permission === 'denied') return
+        Notification.requestPermission().then(function (p) {
+          setSys({ status: p, enabled: p === 'granted' })
         })
-        const t = T()
-        if (tick >= 0) { /* locale changed */ }
-        React.useEffect(function () {
-          const setter = function () { setTick(function (x) { return x + 1 }) }
-          langSetters.push(setter)
-          sysClickHandler = onSysClick
-          return function () {
-            const idx = langSetters.indexOf(setter)
-            if (idx >= 0) langSetters.splice(idx, 1)
-            sysClickHandler = null
-          }
-        }, [])
+      }
+      sysEnabledFlag = sys.enabled
 
-        function onSysClick() {
-          if (typeof Notification === 'undefined') return
-          if (Notification.permission === 'granted') {
-            setSys(function (s) { return Object.assign({}, s, { enabled: !s.enabled }) })
-            return
-          }
-          if (Notification.permission === 'denied') return
-          Notification.requestPermission().then(function (p) {
-            setSys({ status: p, enabled: p === 'granted' })
-          })
-        }
-        sysEnabledFlag = sys.enabled
+      let stateText
+      let stateClass
+      let title
+      if (sys.status === 'denied') {
+        stateText = t.blocked; stateClass = 'ln-in-btn-blocked'; title = t.blockedTitle
+      } else if (sys.status === 'default') {
+        stateText = t.allow; stateClass = 'ln-in-btn-warn'; title = t.allowTitle
+      } else if (sys.enabled) {
+        stateText = t.on; stateClass = 'ln-in-btn-on'; title = t.onTitle
+      } else {
+        stateText = t.off; stateClass = 'ln-in-btn-off'; title = t.offTitle
+      }
+      title = title + ' | ' + t.diagLast + ': ' + fmtTime(lastSystemAt) + ' | ' + t.diagDrop + ': ' + fmtTime(lastDropAt)
 
-        let stateText
-        let stateClass
-        let title
-        if (sys.status === 'denied') {
-          stateText = t.blocked; stateClass = 'ln-side-btn-blocked'; title = t.blockedTitle
-        } else if (sys.status === 'default') {
-          stateText = t.allow; stateClass = 'ln-side-btn-warn'; title = t.allowTitle
-        } else if (sys.enabled) {
-          stateText = t.on; stateClass = 'ln-side-btn-on'; title = t.onTitle
-        } else {
-          stateText = t.off; stateClass = 'ln-side-btn-off'; title = t.offTitle
-        }
-        title = title + ' | ' + t.diagLast + ': ' + fmtTime(lastSystemAt) + ' | ' + t.diagDrop + ': ' + fmtTime(lastDropAt)
-
-        if (!wide) {
-          return React.createElement('button', {
-            className: 'ln-side-circle ' + stateClass,
-            onClick: onSysClick,
-            title,
-            'aria-label': t.sysLabel + ' ' + stateText,
-          },
-            React.createElement('span', { className: 'ln-side-icon' }, '📢'),
-            React.createElement('span', { className: 'ln-side-dot' }),
-          )
-        }
-        return React.createElement('button', {
-          className: 'ln-side-btn ' + stateClass,
-          onClick: onSysClick,
-          title,
-          'aria-label': t.sysLabel + ' ' + stateText,
-        },
-          React.createElement('span', { className: 'ln-side-icon' }, '📢', React.createElement('span', { className: 'ln-side-dot' })),
-          React.createElement('span', { className: 'ln-side-label' }, t.sysLabel),
-          React.createElement('span', { className: 'ln-side-state' }, stateText),
-        )
+      return React.createElement('button', {
+        className: 'ln-in-btn ' + stateClass,
+        onClick: onSysClick,
+        title,
+        'aria-label': t.sysLabel + ' ' + stateText,
       },
-    ))
+        '📢',
+        React.createElement('span', { className: 'ln-in-dot' }),
+      )
+    }
 
-    slots.inject('sidebar.footer.action', () => slots.register(
-      { name: 'sidebar.footer.action', id: 'live-notify-mute', order: 20, label: () => T().muteLabel },
-      function MuteButton(props) {
-        const wide = props !== undefined && props.wide === true
-        const [tick, setTick] = React.useState(0)
-        const [muted, setMuted] = React.useState(false)
-        const t = T()
-        if (tick >= 0) { /* locale changed */ }
-        React.useEffect(function () {
-          const setter = function () { setTick(function (x) { return x + 1 }) }
-          langSetters.push(setter)
-          return function () {
-            const idx = langSetters.indexOf(setter)
-            if (idx >= 0) langSetters.splice(idx, 1)
-          }
-        }, [])
-        mutedFlag = muted
-        const title = muted ? t.bellOffTitle : t.bellOnTitle
-        const label = muted ? t.mutedLabel : t.muteLabel
-        if (!wide) {
-          return React.createElement('button', {
-            className: 'ln-side-circle' + (muted ? ' ln-side-btn-muted' : ''),
-            onClick: function () { setMuted(function (m) { return !m }) },
-            title,
-            'aria-label': muted ? t.bellOffAria : t.bellOnAria,
-          }, muted ? '🔕' : '🔔')
+    function MuteInButton() {
+      const [tick, setTick] = React.useState(0)
+      const [muted, setMuted] = React.useState(false)
+      const t = T()
+      if (tick >= 0) { /* locale changed */ }
+      React.useEffect(function () {
+        const setter = function () { setTick(function (x) { return x + 1 }) }
+        langSetters.push(setter)
+        return function () {
+          const idx = langSetters.indexOf(setter)
+          if (idx >= 0) langSetters.splice(idx, 1)
         }
-        return React.createElement('button', {
-          className: 'ln-side-btn' + (muted ? ' ln-side-btn-muted' : ''),
-          onClick: function () { setMuted(function (m) { return !m }) },
-          title,
-          'aria-label': muted ? t.bellOffAria : t.bellOnAria,
-        },
-          React.createElement('span', { className: 'ln-side-icon' }, muted ? '🔕' : '🔔'),
-          React.createElement('span', { className: 'ln-side-label' }, label),
-        )
-      },
-    ))
+      }, [])
+      mutedFlag = muted
+      const title = muted ? t.bellOffTitle : t.bellOnTitle
+      return React.createElement('button', {
+        className: 'ln-in-btn' + (muted ? ' ln-in-btn-muted' : ''),
+        onClick: function () { setMuted(function (m) { return !m }) },
+        title,
+        'aria-label': muted ? t.bellOffAria : t.bellOnAria,
+      }, muted ? '🔕' : '🔔')
+    }
   },
 }

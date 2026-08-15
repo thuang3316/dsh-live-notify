@@ -13,7 +13,7 @@ The UI language follows the harness language setting (English / 中文) and all 
 - **In-page**: turns completed or errored in *other* sessions pop a themed toast (Done 8 s / Error 15 s); click to jump to the session, hover to pause, × to dismiss, max 3 stacked
 - **Away from page**: any session (including the current one) completing fires a system notification; clicking it focuses the window and opens the session
 - **Back on page**: events from while you were away replay as toasts; with no notification permission, the tab title flashes "●" instead
-- **Controls**: two buttons at the sidebar footer — system notifications (state dot: green = on / red = off or blocked / amber = tap to allow) and mute; they follow the shipped sidebar-action style (wide row / 36px circle on the rail)
+- **Controls**: two compact buttons inside the composer tool row — system notifications (state dot: green = on / red = off or blocked / amber = tap to allow) and mute; always visible, never blocking
 - **i18n**: all plugin text follows the harness locale (`zh` / `en`) and updates live on `locale/change`
 
 ## Repository layout
@@ -44,10 +44,10 @@ Paste the contents of `src/host.js` and `src/client.js` to your session's agent 
 
 ## Usage
 
-- **System-notifications button (sidebar footer, 📢)**: shows the permission state via its dot; click to toggle / request permission
+- **System-notifications button (composer tool row, 📢)**: shows the permission state via its dot; click to toggle / request permission
   - Not authorized (amber dot) → click to trigger the browser permission prompt; granting enables notifications automatically
   - Enabled (green dot) → click to disable (dot turns red)
-- **Mute button (sidebar footer, 🔔)**: temporarily mute everything (toasts and system notifications); the icon turns amber while muted
+- **Mute button (composer tool row, 🔔)**: temporarily mute everything (toasts and system notifications); the icon turns amber while muted
 - **Toasts (bottom-right)**: click to open the session; hover to pause the countdown; × to dismiss; at most 3 at a time; on windows narrower than 1480px the stack lifts above the composer
 
 ## System notification troubleshooting
