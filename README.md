@@ -1,69 +1,78 @@
 # dsh-live-notify
 
-DeepSeek Harness(DSH)动态 Cordis 插件:当会话回合完成或出错时,在页面右下角弹出 toast,并在你离开页面(切走标签页 / 最小化 / 窗口失焦)时补发浏览器系统通知。
+> [中文版](./README.zh.md)
 
-- 页面内:其他会话的回合完成/出错 → 右下角 toast(主题化配色,明暗自适应)
-- 离开页面:任何会话(含当前会话)完成 → 系统通知,点击通知聚焦窗口并跳转到对应会话
-- 回到页面:离开期间的事件以 toast 补弹
-- 控件:系统通知状态胶囊(绿=开启 / 红=关闭 / 黄=待授权)+ 静音铃铛
+A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) dynamic Cordis plugin that shows a toast in the bottom-right corner when a session turn completes or errors, and fires a browser **system notification** when you are away from the page (another tab, minimized window, or lost focus).
 
-## 仓库结构
+The UI language follows the harness language setting (English / 中文) and all colors use the harness theme tokens, adapting to light and dark themes.
 
-| 文件 | 内容 |
+![Live notifications in the page (light theme)](./assets/toast-en.png)
+
+## Features
+
+- **In-page**: turns completed or errored in *other* sessions pop a themed toast (Done 8 s / Error 15 s); click to jump to the session, hover to pause, × to dismiss, max 3 stacked
+- **Away from page**: any session (including the current one) completing fires a system notification; clicking it focuses the window and opens the session
+- **Back on page**: events from while you were away replay as toasts; with no notification permission, the tab title flashes "●" instead
+- **Controls**: a status pill (green = on / red = off / amber = tap to allow / red dot = blocked) plus a mute bell
+- **i18n**: all plugin text follows the harness locale (`zh` / `en`) and updates live on `locale/change`
+
+## Repository layout
+
+| File | Content |
 |---|---|
-| `src/host.js` | Host 半代码(`cordis_define` 的 `code.host`) |
-| `src/client.js` | Client 半代码(`cordis_define` 的 `code.client`) |
-| `plugin.json` | 插件元数据(名称、用途、版本) |
-| `README.md` | 本文件 |
+| `src/host.js` | Host half (`code.host` for `cordis_define`) |
+| `src/client.js` | Client half (`code.client` for `cordis_define`) |
+| `plugin.json` | Plugin metadata (id prefix, name, purpose, version) |
+| `assets/` | Screenshots (light theme) |
 
-## 安装
+## Install
 
-这是一个**动态 Cordis 插件**:通过 DSH 会话里的 `cordis_define` 工具定义并运行,随进程存活,重启 DSH 后需要重新安装。
+This is a **dynamic Cordis plugin**: it is defined and run through the `cordis_define` / `cordis_run` tools inside a DSH session. It lives in the DSH process only — after a DSH restart, reinstall it (about half a minute).
 
-### 方式一:让 agent 从本仓库安装(推荐)
+### Option 1: let the agent install from this repo (recommended)
 
-在任意带 cordis 能力的 DSH 会话中发送:
+In any DSH session with the Cordis tools, send:
 
-> 安装 live-notify 插件:读取 https://raw.githubusercontent.com/<你的用户名>/dsh-live-notify/main/src/host.js 和 https://raw.githubusercontent.com/<你的用户名>/dsh-live-notify/main/src/client.js,用这两个文件的内容执行 cordis_define 和 cordis_run。
+> Install the live-notify plugin: read `https://raw.githubusercontent.com/<YOUR_USERNAME>/dsh-live-notify/main/src/host.js` and `https://raw.githubusercontent.com/<YOUR_USERNAME>/dsh-live-notify/main/src/client.js`, then run cordis_define with those two files as code.host / code.client and cordis_run it.
 
-- 定义后页面会生成批准请求:点击**允许**;勾选双勾可授权后续版本。
-- 激活成功后,右下角出现「系统通知」状态胶囊和静音铃铛。
+- A run request appears: click **Approve** (double-check authorizes future versions of this plugin).
+- After activation, the status pill and the mute bell appear at the bottom-right.
 
-### 方式二:本地文件安装
+### Option 2: local files
 
-把 `src/host.js` 和 `src/client.js` 的内容粘贴给会话中的 agent,让它执行 `cordis_define` + `cordis_run` 即可。
+Paste the contents of `src/host.js` and `src/client.js` to your session's agent and ask it to `cordis_define` + `cordis_run` them.
 
-## 使用
+## Usage
 
-- **状态胶囊**:显示系统通知状态,点击切换/请求授权
-  - 未授权 → 点击弹出浏览器权限请求,允许后自动开启
-  - 已开启(绿)→ 点击关闭(变红)
-- **🔔 铃铛**:临时静音全部通知(页面内 toast 与系统通知),再点恢复
-- **toast**:点击跳转到对应会话;悬停暂停倒计时;× 手动关闭;同屏最多 3 条
+- **Status pill**: shows the system-notification state; click to toggle / request permission
+  - Not authorized → click to trigger the browser permission prompt; granting enables notifications automatically
+  - Enabled (green) → click to disable (turns red)
+- **🔔 Bell**: temporarily mute everything (toasts and system notifications); click again to unmute
+- **Toasts**: click to open the session; hover to pause the countdown; × to dismiss; at most 3 at a time
 
-## 系统通知排障
+## System notification troubleshooting
 
-系统通知不弹时,按顺序检查:
+If system notifications never appear, check in order:
 
-1. **浏览器权限**:胶囊显示「点击授权」→ 点击并允许
-2. **Windows 通知设置**:设置 → 系统 → 通知 → 确保 Google Chrome(或你的浏览器)允许通知
-3. **专注助手**:点任务栏时钟打开通知中心,确认专注助手处于关闭状态
-4. **通知位置**:Windows 通知在屏幕右下角弹出数秒后收入通知中心
+1. **Browser permission**: pill says "Tap to allow" → click it and allow
+2. **Windows notification settings**: Settings → System → Notifications → make sure your browser (e.g. Google Chrome) is allowed
+3. **Focus assist**: open the notification center from the taskbar clock and make sure Focus assist is off
+4. **Where they appear**: Windows shows them at the bottom-right corner for a few seconds, then they go to the notification center
 
-## 已知边界(浏览器硬限制,非 bug)
+## Known boundaries (browser hard limits, not bugs)
 
-- **后台定时器节流**:标签页切到后台超过约 5 分钟后,浏览器把轮询压到约 1 次/分钟,系统通知最长可能延迟约 1 分钟
-- **浏览器完全关闭 = 无通知**:真正的后台推送需要 Service Worker + Web Push(产品级改造)
-- **进程内临时**:动态插件不落盘,DSH 重启后消失,按上面步骤重装
+- **Background timer throttling**: after ~5 minutes hidden, browsers throttle timers to about once a minute, so a system notification can be delayed by up to ~1 minute
+- **Browser fully closed = no notifications**: true background push needs Service Worker + Web Push (a product-level change)
+- **Process-local**: dynamic plugins are not persisted; reinstall after a DSH restart
 
-## 设计要点
+## Design notes
 
-- **事件源**:Host 监听 `agent/status`(回合完成)与 `agent/error`(回合出错)
-- **未读队列**:当前会话的完成事件先留存,用户离开页面时统一结算成系统通知——避免"事件在用户离开前就被消费丢弃"的时序缺陷
-- **过滤规则**:页面内只通知非当前会话(不打扰);离开时包含当前会话
-- **积压策略**:每会话仅保留最新事件,错过即丢弃;超过 10 分钟的事件过期
-- **主题**:全部使用页面主题 token(`--dsw-alias-*`),明暗主题自适应
+- **Event sources**: the Host half listens to `agent/status` (turn completed) and `agent/error` (turn errored)
+- **Unread queue**: completions of the current session are retained first and settled into a system notification when you leave the page — this avoids the timing flaw where an event is consumed (and filtered) before you switch away
+- **Filter rule**: on-page, only other sessions notify (no noise); away, the current session is included
+- **Backlog policy**: latest event per session wins; missed events are dropped; events older than 10 minutes expire
+- **Theme**: all colors use the harness `--dsw-alias-*` theme tokens
 
-## 许可
+## License
 
-MIT,见 [LICENSE](./LICENSE)。
+MIT, see [LICENSE](./LICENSE).

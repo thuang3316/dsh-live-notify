@@ -6,6 +6,65 @@ return {
     const slots = ctx.get('slots')
     if (slots === undefined) return
     const sessions = ctx.get('sessions')
+    const localeSvc = ctx.get('locale')
+
+    const STR = {
+      zh: {
+        done: '完成', error: '出错', hint: '提示',
+        sysDoneSuffix: ' 完成', sysErrorSuffix: ' 出错',
+        sysDoneBody: '会话回合已完成', sysErrorBody: '会话回合出错',
+        sysLabel: '系统通知',
+        on: '已开启', off: '已关闭', allow: '点击授权', blocked: '被阻止',
+        onTitle: '系统通知已开启,点击关闭',
+        offTitle: '系统通知已关闭,点击开启',
+        allowTitle: '点击授权系统通知(离开页面时提醒)',
+        blockedTitle: '浏览器已阻止通知,请在浏览器设置中允许',
+        hintToast: '离开期间有回合完成。点击右下角状态胶囊开启系统通知,离开也能收到提醒',
+        bellOnTitle: '通知开启,点击静音', bellOffTitle: '通知已静音,点击恢复',
+        bellOnAria: '静音通知', bellOffAria: '恢复通知',
+        closeAria: '关闭通知',
+        diagLast: '上次系统通知', diagDrop: '上次丢弃', none: '无',
+      },
+      en: {
+        done: 'Done', error: 'Error', hint: 'Hint',
+        sysDoneSuffix: ' done', sysErrorSuffix: ' error',
+        sysDoneBody: 'Turn completed', sysErrorBody: 'Turn errored',
+        sysLabel: 'Notifications',
+        on: 'Enabled', off: 'Disabled', allow: 'Tap to allow', blocked: 'Blocked',
+        onTitle: 'System notifications on, click to turn off',
+        offTitle: 'System notifications off, click to turn on',
+        allowTitle: 'Click to allow system notifications (alerts when you leave the page)',
+        blockedTitle: 'Notifications are blocked by the browser; allow them in browser settings',
+        hintToast: 'A turn completed while you were away. Click the status pill to enable system notifications',
+        bellOnTitle: 'Notifications on, click to mute', bellOffTitle: 'Muted, click to unmute',
+        bellOnAria: 'Mute notifications', bellOffAria: 'Unmute notifications',
+        closeAria: 'Close notification',
+        diagLast: 'Last system notification', diagDrop: 'Last dropped', none: 'none',
+      },
+    }
+
+    let uiLang = 'zh'
+    function detectLang() {
+      if (localeSvc === undefined) return 'zh'
+      try {
+        const snap = localeSvc.getLocale()
+        const active = snap === undefined || snap === null ? undefined : snap.active
+        if (typeof active === 'string' && active.indexOf('en') === 0) return 'en'
+        return 'zh'
+      } catch (err) {
+        return 'zh'
+      }
+    }
+    uiLang = detectLang()
+    let langSetter = null
+    ctx.on('locale/change', function () {
+      const next = detectLang()
+      if (next !== uiLang) {
+        uiLang = next
+        if (langSetter !== null) langSetter()
+      }
+    })
+    function T() { return uiLang === 'en' ? STR.en : STR.zh }
 
     styles.insert(`
       .ln-live-root { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: none; z-index: 2000; }
@@ -91,7 +150,7 @@ return {
     const unread = new Map()
 
     function fmtTime(ts) {
-      if (ts === null) return '无'
+      if (ts === null) return T().none
       const d = new Date(ts)
       const p = function (n) { return n < 10 ? '0' + n : String(n) }
       return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds())
@@ -108,12 +167,20 @@ return {
 
         const [muted, setMuted] = React.useState(false)
         const [toasts, setToasts] = React.useState([])
+        const [langTick, setLangTick] = React.useState(0)
         const [sys, setSys] = React.useState({
           status: typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
           enabled: typeof Notification !== 'undefined' && Notification.permission === 'granted',
         })
         mutedFlag = muted
         sysEnabledFlag = sys.enabled
+        const t = T()
+        if (langTick >= 0) { /* locale changed: re-render with new strings */ }
+
+        React.useEffect(function langEffect() {
+          langSetter = function () { setLangTick(function (x) { return x + 1 }) }
+          return function () { langSetter = null }
+        }, [])
 
         function isAway() {
           if (typeof document === 'undefined' || typeof document.hidden !== 'boolean') return null
@@ -141,8 +208,8 @@ return {
         function fireSystem(title, kind, sessionId) {
           if (!sysAvailable()) return false
           try {
-            const n = new Notification(title + (kind === 'error' ? ' 出错' : ' 完成'), {
-              body: kind === 'error' ? '会话回合出错' : '会话回合已完成',
+            const n = new Notification(title + (kind === 'error' ? t.sysErrorSuffix : t.sysDoneSuffix), {
+              body: kind === 'error' ? t.sysErrorBody : t.sysDoneBody,
             })
             n.onclick = function () {
               if (typeof window !== 'undefined' && typeof window.focus === 'function') window.focus()
@@ -235,7 +302,7 @@ return {
                   + String(typeof Notification === 'undefined' ? 'unsupported' : Notification.permission) + ', enabled=' + String(sysEnabledFlag))
                 if (now - lastHintAt > 60000) {
                   lastHintAt = now
-                  addToast({ sessionId: 'hint:sys', title: '离开期间有回合完成。点击右下角状态胶囊开启系统通知,离开也能收到提醒', kind: 'hint', at: now }, now)
+                  addToast({ sessionId: 'hint:sys', title: T().hintToast, kind: 'hint', at: now }, now)
                 }
               }
             } else {
@@ -356,11 +423,11 @@ return {
               t.kind === 'error' ? '✕' : (t.kind === 'hint' ? '💡' : '✓')),
             React.createElement('span', { className: 'ln-live-title' }, t.title),
             React.createElement('span', { className: 'ln-live-kind' },
-              t.kind === 'error' ? '出错' : (t.kind === 'hint' ? '提示' : '完成')),
+              t.kind === 'error' ? t.error : (t.kind === 'hint' ? t.hint : t.done)),
             React.createElement('button', {
               className: 'ln-live-close',
               onClick: function (ev) { ev.stopPropagation(); dismiss(t.id)() },
-              'aria-label': '关闭通知',
+              'aria-label': t.closeAria,
             }, '×'),
           )
         })
@@ -369,38 +436,38 @@ return {
         let statusClass = 'ln-live-status'
         let statusTitle
         if (sys.status === 'denied') {
-          stateText = '被阻止'
+          stateText = t.blocked
           statusClass += ' ln-live-status-blocked'
-          statusTitle = '浏览器已阻止通知,请在浏览器设置中允许'
+          statusTitle = t.blockedTitle
         } else if (sys.status === 'default') {
-          stateText = '点击授权'
+          stateText = t.allow
           statusClass += ' ln-live-status-warn'
-          statusTitle = '点击授权系统通知(离开页面时提醒)'
+          statusTitle = t.allowTitle
         } else if (sys.enabled) {
-          stateText = '已开启'
+          stateText = t.on
           statusClass += ' ln-live-status-on'
-          statusTitle = '系统通知已开启,点击关闭'
+          statusTitle = t.onTitle
         } else {
-          stateText = '已关闭'
+          stateText = t.off
           statusClass += ' ln-live-status-off'
-          statusTitle = '系统通知已关闭,点击开启'
+          statusTitle = t.offTitle
         }
         const statusPill = React.createElement('div', {
           className: statusClass,
           onClick: onSysClick,
-          title: statusTitle + ' | 上次系统通知: ' + fmtTime(lastSystemAt) + ' | 上次丢弃: ' + fmtTime(lastDropAt),
+          title: statusTitle + ' | ' + t.diagLast + ': ' + fmtTime(lastSystemAt) + ' | ' + t.diagDrop + ': ' + fmtTime(lastDropAt),
           role: 'button',
         },
           React.createElement('span', { className: 'ln-live-dot' }),
-          React.createElement('span', null, '系统通知'),
+          React.createElement('span', null, t.sysLabel),
           React.createElement('span', { className: 'ln-live-state' }, stateText),
         )
 
         const bell = React.createElement('button', {
           className: 'ln-live-bell' + (muted ? ' ln-live-bell-muted' : ''),
           onClick: function () { setMuted(function (m) { return !m }) },
-          title: muted ? '通知已静音,点击恢复' : '通知开启,点击静音',
-          'aria-label': muted ? '恢复通知' : '静音通知',
+          title: muted ? t.bellOffTitle : t.bellOnTitle,
+          'aria-label': muted ? t.bellOffAria : t.bellOnAria,
         }, muted ? '🔕' : '🔔')
 
         return React.createElement('div', { className: 'ln-live-root' },
