@@ -33,7 +33,7 @@
 
 在任意带 cordis 能力的 DSH 会话中发送:
 
-> 安装 live-notify 插件:读取 `https://raw.githubusercontent.com/<你的用户名>/dsh-live-notify/main/src/host.js` 和 `https://raw.githubusercontent.com/<你的用户名>/dsh-live-notify/main/src/client.js`,用这两个文件的内容作为 code.host / code.client 执行 cordis_define,然后 cordis_run。
+> 安装 live-notify 插件:读取 `https://raw.githubusercontent.com/thuang3316/dsh-live-notify/main/src/host.js` 和 `https://raw.githubusercontent.com/thuang3316/dsh-live-notify/main/src/client.js`,用这两个文件的内容作为 code.host / code.client 执行 cordis_define,然后 cordis_run。
 
 - 页面会生成运行请求:点击**允许**(勾选双勾可授权该插件后续版本)。
 - 激活成功后,右下角出现状态胶囊与静音铃铛。

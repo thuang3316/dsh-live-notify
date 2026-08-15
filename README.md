@@ -33,7 +33,7 @@ This is a **dynamic Cordis plugin**: it is defined and run through the `cordis_d
 
 In any DSH session with the Cordis tools, send:
 
-> Install the live-notify plugin: read `https://raw.githubusercontent.com/<YOUR_USERNAME>/dsh-live-notify/main/src/host.js` and `https://raw.githubusercontent.com/<YOUR_USERNAME>/dsh-live-notify/main/src/client.js`, then run cordis_define with those two files as code.host / code.client and cordis_run it.
+> Install the live-notify plugin: read `https://raw.githubusercontent.com/thuang3316/dsh-live-notify/main/src/host.js` and `https://raw.githubusercontent.com/thuang3316/dsh-live-notify/main/src/client.js`, then run cordis_define with those two files as code.host / code.client and cordis_run it.
 
 - A run request appears: click **Approve** (double-check authorizes future versions of this plugin).
 - After activation, the status pill and the mute bell appear at the bottom-right.
