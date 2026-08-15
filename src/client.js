@@ -107,7 +107,7 @@ return {
       .ln-live-stack { display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
       .ln-live-toast {
         pointer-events: auto; position: relative; display: flex; align-items: center; gap: 12px;
-        max-width: 400px; padding: 14px 16px; border-radius: 14px;
+        max-width: min(400px, calc(100vw - 40px)); padding: 14px 16px; border-radius: 14px;
         background: var(--dsw-alias-bg-overlay, var(--dsw-alias-bg-layer-2, rgba(30,34,46,0.95)));
         color: var(--dsw-alias-label-primary, #e6e9ef);
         border: 1px solid var(--dsw-alias-border-l1, rgba(255,255,255,0.14));
@@ -135,6 +135,14 @@ return {
       }
       @media (prefers-reduced-motion: reduce) {
         .ln-live-toast { animation: none; }
+      }
+      /* Narrow windows: the centered composer (max 812px) reaches into the
+         bottom-right corner — lift the controls above the input area. */
+      @media (max-width: 1280px) {
+        .ln-live-root { bottom: 150px; right: 16px; }
+      }
+      @media (max-width: 520px) {
+        .ln-live-label { display: none; }
       }
     `)
 
@@ -459,7 +467,7 @@ return {
           role: 'button',
         },
           React.createElement('span', { className: 'ln-live-dot' }),
-          React.createElement('span', null, t.sysLabel),
+          React.createElement('span', { className: 'ln-live-label' }, t.sysLabel),
           React.createElement('span', { className: 'ln-live-state' }, stateText),
         )
 
