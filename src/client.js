@@ -19,7 +19,8 @@ return {
         offTitle: '系统通知已关闭,点击开启',
         allowTitle: '点击授权系统通知(离开页面时提醒)',
         blockedTitle: '浏览器已阻止通知,请在浏览器设置中允许',
-        hintToast: '离开期间有回合完成。点击右下角状态胶囊开启系统通知,离开也能收到提醒',
+        hintToast: '离开期间有回合完成。点击侧边栏底部的系统通知按钮开启,离开也能收到提醒',
+        muteLabel: '静音', mutedLabel: '已静音',
         bellOnTitle: '通知开启,点击静音', bellOffTitle: '通知已静音,点击恢复',
         bellOnAria: '静音通知', bellOffAria: '恢复通知',
         closeAria: '关闭通知',
@@ -35,7 +36,8 @@ return {
         offTitle: 'System notifications off, click to turn on',
         allowTitle: 'Click to allow system notifications (alerts when you leave the page)',
         blockedTitle: 'Notifications are blocked by the browser; allow them in browser settings',
-        hintToast: 'A turn completed while you were away. Click the status pill to enable system notifications',
+        hintToast: 'A turn completed while you were away. Enable system notifications from the sidebar button',
+        muteLabel: 'Mute', mutedLabel: 'Muted',
         bellOnTitle: 'Notifications on, click to mute', bellOffTitle: 'Muted, click to unmute',
         bellOnAria: 'Mute notifications', bellOffAria: 'Unmute notifications',
         closeAria: 'Close notification',
@@ -56,54 +58,18 @@ return {
       }
     }
     uiLang = detectLang()
-    let langSetter = null
+    const langSetters = []
     ctx.on('locale/change', function () {
       const next = detectLang()
       if (next !== uiLang) {
         uiLang = next
-        if (langSetter !== null) langSetter()
+        for (let i = 0; i < langSetters.length; i++) langSetters[i]()
       }
     })
     function T() { return uiLang === 'en' ? STR.en : STR.zh }
 
     styles.insert(`
       .ln-live-root { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: none; z-index: 2000; }
-      .ln-live-actions { display: flex; gap: 10px; pointer-events: none; align-items: center; }
-      .ln-live-bell {
-        pointer-events: auto; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-        border: 1px solid var(--dsw-alias-border-l1, rgba(255,255,255,0.14)); border-radius: 50%; cursor: pointer; line-height: 1;
-        background: var(--dsw-alias-bg-layer-2, rgba(30,34,46,0.92));
-        color: var(--dsw-alias-label-primary, #e6e9ef);
-        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-        font-size: 16px;
-      }
-      .ln-live-bell:hover { filter: brightness(1.08); }
-      .ln-live-bell.ln-live-bell-muted {
-        border-color: var(--dsw-alias-state-warn-primary, #e8b86d);
-        color: var(--dsw-alias-state-warn-primary, #e8b86d);
-      }
-      .ln-live-status {
-        pointer-events: auto; display: flex; align-items: center; gap: 8px; padding: 8px 14px;
-        border-radius: 999px; font-size: 12px; line-height: 18px; cursor: pointer;
-        background: var(--dsw-alias-bg-layer-2, rgba(30,34,46,0.92));
-        color: var(--dsw-alias-label-primary, #e6e9ef);
-        border: 1px solid var(--dsw-alias-border-l1, rgba(255,255,255,0.14));
-        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-      }
-      .ln-live-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; border: 1.5px solid var(--dsw-alias-label-secondary, #9aa3b2); background: transparent; }
-      .ln-live-state { font-weight: 600; }
-      .ln-live-status.ln-live-status-on { border-color: var(--dsw-alias-state-success-primary, #7ee2a8); }
-      .ln-live-status.ln-live-status-on .ln-live-dot { background: var(--dsw-alias-state-success-primary, #7ee2a8); border-color: var(--dsw-alias-state-success-primary, #7ee2a8); }
-      .ln-live-status.ln-live-status-on .ln-live-state { color: var(--dsw-alias-state-success-primary, #7ee2a8); }
-      .ln-live-status.ln-live-status-off { border-color: var(--dsw-alias-state-error-primary, #ff7b7b); }
-      .ln-live-status.ln-live-status-off .ln-live-dot { border-color: var(--dsw-alias-state-error-primary, #ff7b7b); background: transparent; }
-      .ln-live-status.ln-live-status-off .ln-live-state { color: var(--dsw-alias-state-error-primary, #ff7b7b); }
-      .ln-live-status.ln-live-status-warn { border-color: var(--dsw-alias-state-warn-primary, #e8b86d); }
-      .ln-live-status.ln-live-status-warn .ln-live-dot { border-color: var(--dsw-alias-state-warn-primary, #e8b86d); background: transparent; }
-      .ln-live-status.ln-live-status-warn .ln-live-state { color: var(--dsw-alias-state-warn-primary, #e8b86d); }
-      .ln-live-status.ln-live-status-blocked { border-color: var(--dsw-alias-state-error-primary, #ff7b7b); }
-      .ln-live-status.ln-live-status-blocked .ln-live-dot { background: var(--dsw-alias-state-error-primary, #ff7b7b); border-color: var(--dsw-alias-state-error-primary, #ff7b7b); }
-      .ln-live-status.ln-live-status-blocked .ln-live-state { color: var(--dsw-alias-state-error-primary, #ff7b7b); }
       .ln-live-stack { display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
       .ln-live-toast {
         pointer-events: auto; position: relative; display: flex; align-items: center; gap: 12px;
@@ -136,14 +102,34 @@ return {
       @media (prefers-reduced-motion: reduce) {
         .ln-live-toast { animation: none; }
       }
-      /* Narrow windows: the centered composer (max 812px) reaches into the
-         bottom-right corner — lift the controls above the input area. */
       @media (max-width: 1480px) {
         .ln-live-root { bottom: 150px; right: 16px; }
       }
-      @media (max-width: 520px) {
-        .ln-live-label { display: none; }
+      /* Sidebar footer actions (match the shipped Cordis panel badge). */
+      .ln-side-btn {
+        display: inline-flex; align-items: center; gap: 8px; width: 100%; height: 49px;
+        padding: 0 8px 0 6px; border: none; border-radius: 12px; background: transparent;
+        color: var(--dsw-alias-label-primary, #e6e9ef); font-family: inherit; font-size: 14px;
+        cursor: pointer; overflow: hidden;
       }
+      .ln-side-btn:hover { background: var(--dsw-alias-interactive-bg-hover-solid, rgba(0,0,0,0.05)); }
+      .ln-side-icon { flex: none; position: relative; display: grid; place-items: center; font-size: 15px; }
+      .ln-side-dot { position: absolute; top: -2px; right: -4px; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--dsw-alias-bg-base, #fff); background: transparent; }
+      .ln-side-btn-on .ln-side-dot { background: var(--dsw-alias-state-success-primary, #7ee2a8); }
+      .ln-side-btn-off .ln-side-dot { background: var(--dsw-alias-state-error-primary, #ff7b7b); }
+      .ln-side-btn-warn .ln-side-dot { background: var(--dsw-alias-state-warn-primary, #e8b86d); }
+      .ln-side-btn-blocked .ln-side-dot { background: var(--dsw-alias-state-error-primary, #ff7b7b); }
+      .ln-side-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .ln-side-state { flex: none; margin-left: auto; color: var(--dsw-alias-label-tertiary, #9aa3b2); font-size: 12px; line-height: 16px; }
+      .ln-side-btn-muted { color: var(--dsw-alias-state-warn-primary, #e8b86d); }
+      .ln-side-circle {
+        display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+        padding: 0; border: none; border-radius: 50%; background: transparent;
+        color: var(--dsw-alias-label-primary, #e6e9ef); cursor: pointer; position: relative; font-size: 15px;
+      }
+      .ln-side-circle:hover { background: var(--dsw-alias-interactive-bg-hover-solid, rgba(0,0,0,0.05)); }
+      .ln-side-circle .ln-side-dot { top: 1px; right: 1px; border-color: var(--dsw-alias-bg-base, #fff); }
+      .ln-side-circle.ln-side-btn-muted { color: var(--dsw-alias-state-warn-primary, #e8b86d); }
     `)
 
     let currentSessionId
@@ -157,6 +143,7 @@ return {
     let lastAwayFlag = null
     let resizing = false
     let resizeDisposer = null
+    let sysClickHandler = null
     const unread = new Map()
 
     function fmtTime(ts) {
@@ -175,21 +162,18 @@ return {
           : undefined
         currentSessionId = current
 
-        const [muted, setMuted] = React.useState(false)
         const [toasts, setToasts] = React.useState([])
         const [langTick, setLangTick] = React.useState(0)
-        const [sys, setSys] = React.useState({
-          status: typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
-          enabled: typeof Notification !== 'undefined' && Notification.permission === 'granted',
-        })
-        mutedFlag = muted
-        sysEnabledFlag = sys.enabled
         const t = T()
         if (langTick >= 0) { /* locale changed: re-render with new strings */ }
 
         React.useEffect(function langEffect() {
-          langSetter = function () { setLangTick(function (x) { return x + 1 }) }
-          return function () { langSetter = null }
+          const setter = function () { setLangTick(function (x) { return x + 1 }) }
+          langSetters.push(setter)
+          return function () {
+            const idx = langSetters.indexOf(setter)
+            if (idx >= 0) langSetters.splice(idx, 1)
+          }
         }, [])
 
         function isAway() {
@@ -325,11 +309,6 @@ return {
           })
         }
 
-        React.useEffect(function pollEffect() {
-          pollOnce()
-          return ctx.interval(pollOnce, 1000)
-        }, [])
-
         function onWindowResize() {
           resizing = true
           if (resizeDisposer !== null) resizeDisposer()
@@ -339,6 +318,11 @@ return {
             pollOnce()
           }, 300)
         }
+
+        React.useEffect(function pollEffect() {
+          pollOnce()
+          return ctx.interval(pollOnce, 1000)
+        }, [])
 
         React.useEffect(function resizeEffect() {
           if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return
@@ -417,21 +401,10 @@ return {
             setToasts(function (prev) { return prev.filter(function (x) { return x.id !== id }) })
           }
         }
-        function onSysClick() {
-          if (typeof Notification === 'undefined') return
-          if (Notification.permission === 'granted') {
-            setSys(function (s) { return Object.assign({}, s, { enabled: !s.enabled }) })
-            return
-          }
-          if (Notification.permission === 'denied') return
-          Notification.requestPermission().then(function (p) {
-            setSys({ status: p, enabled: p === 'granted' })
-          })
-        }
         function openToast(t) {
           return function () {
             if (t.sessionId.indexOf('hint:') === 0) {
-              onSysClick()
+              if (sysClickHandler !== null) sysClickHandler()
               dismiss(t.id)()
               return
             }
@@ -464,47 +437,120 @@ return {
           )
         })
 
-        let stateText
-        let statusClass = 'ln-live-status'
-        let statusTitle
-        if (sys.status === 'denied') {
-          stateText = t.blocked
-          statusClass += ' ln-live-status-blocked'
-          statusTitle = t.blockedTitle
-        } else if (sys.status === 'default') {
-          stateText = t.allow
-          statusClass += ' ln-live-status-warn'
-          statusTitle = t.allowTitle
-        } else if (sys.enabled) {
-          stateText = t.on
-          statusClass += ' ln-live-status-on'
-          statusTitle = t.onTitle
-        } else {
-          stateText = t.off
-          statusClass += ' ln-live-status-off'
-          statusTitle = t.offTitle
-        }
-        const statusPill = React.createElement('div', {
-          className: statusClass,
-          onClick: onSysClick,
-          title: statusTitle + ' | ' + t.diagLast + ': ' + fmtTime(lastSystemAt) + ' | ' + t.diagDrop + ': ' + fmtTime(lastDropAt),
-          role: 'button',
-        },
-          React.createElement('span', { className: 'ln-live-dot' }),
-          React.createElement('span', { className: 'ln-live-label' }, t.sysLabel),
-          React.createElement('span', { className: 'ln-live-state' }, stateText),
-        )
-
-        const bell = React.createElement('button', {
-          className: 'ln-live-bell' + (muted ? ' ln-live-bell-muted' : ''),
-          onClick: function () { setMuted(function (m) { return !m }) },
-          title: muted ? t.bellOffTitle : t.bellOnTitle,
-          'aria-label': muted ? t.bellOffAria : t.bellOnAria,
-        }, muted ? '🔕' : '🔔')
-
         return React.createElement('div', { className: 'ln-live-root' },
           React.createElement('div', { className: 'ln-live-stack', role: 'status', 'aria-live': 'polite' }, toastEls),
-          React.createElement('div', { className: 'ln-live-actions' }, statusPill, bell),
+        )
+      },
+    ))
+
+    slots.inject('sidebar.footer.action', () => slots.register(
+      { name: 'sidebar.footer.action', id: 'live-notify-sys', order: 10, label: () => T().sysLabel },
+      function SysButton(props) {
+        const wide = props !== undefined && props.wide === true
+        const [tick, setTick] = React.useState(0)
+        const [sys, setSys] = React.useState({
+          status: typeof Notification !== 'undefined' ? Notification.permission : 'unsupported',
+          enabled: typeof Notification !== 'undefined' && Notification.permission === 'granted',
+        })
+        const t = T()
+        if (tick >= 0) { /* locale changed */ }
+        React.useEffect(function () {
+          const setter = function () { setTick(function (x) { return x + 1 }) }
+          langSetters.push(setter)
+          sysClickHandler = onSysClick
+          return function () {
+            const idx = langSetters.indexOf(setter)
+            if (idx >= 0) langSetters.splice(idx, 1)
+            sysClickHandler = null
+          }
+        }, [])
+
+        function onSysClick() {
+          if (typeof Notification === 'undefined') return
+          if (Notification.permission === 'granted') {
+            setSys(function (s) { return Object.assign({}, s, { enabled: !s.enabled }) })
+            return
+          }
+          if (Notification.permission === 'denied') return
+          Notification.requestPermission().then(function (p) {
+            setSys({ status: p, enabled: p === 'granted' })
+          })
+        }
+        sysEnabledFlag = sys.enabled
+
+        let stateText
+        let stateClass
+        let title
+        if (sys.status === 'denied') {
+          stateText = t.blocked; stateClass = 'ln-side-btn-blocked'; title = t.blockedTitle
+        } else if (sys.status === 'default') {
+          stateText = t.allow; stateClass = 'ln-side-btn-warn'; title = t.allowTitle
+        } else if (sys.enabled) {
+          stateText = t.on; stateClass = 'ln-side-btn-on'; title = t.onTitle
+        } else {
+          stateText = t.off; stateClass = 'ln-side-btn-off'; title = t.offTitle
+        }
+        title = title + ' | ' + t.diagLast + ': ' + fmtTime(lastSystemAt) + ' | ' + t.diagDrop + ': ' + fmtTime(lastDropAt)
+
+        if (!wide) {
+          return React.createElement('button', {
+            className: 'ln-side-circle ' + stateClass,
+            onClick: onSysClick,
+            title,
+            'aria-label': t.sysLabel + ' ' + stateText,
+          },
+            React.createElement('span', { className: 'ln-side-icon' }, '📢'),
+            React.createElement('span', { className: 'ln-side-dot' }),
+          )
+        }
+        return React.createElement('button', {
+          className: 'ln-side-btn ' + stateClass,
+          onClick: onSysClick,
+          title,
+          'aria-label': t.sysLabel + ' ' + stateText,
+        },
+          React.createElement('span', { className: 'ln-side-icon' }, '📢', React.createElement('span', { className: 'ln-side-dot' })),
+          React.createElement('span', { className: 'ln-side-label' }, t.sysLabel),
+          React.createElement('span', { className: 'ln-side-state' }, stateText),
+        )
+      },
+    ))
+
+    slots.inject('sidebar.footer.action', () => slots.register(
+      { name: 'sidebar.footer.action', id: 'live-notify-mute', order: 20, label: () => T().muteLabel },
+      function MuteButton(props) {
+        const wide = props !== undefined && props.wide === true
+        const [tick, setTick] = React.useState(0)
+        const [muted, setMuted] = React.useState(false)
+        const t = T()
+        if (tick >= 0) { /* locale changed */ }
+        React.useEffect(function () {
+          const setter = function () { setTick(function (x) { return x + 1 }) }
+          langSetters.push(setter)
+          return function () {
+            const idx = langSetters.indexOf(setter)
+            if (idx >= 0) langSetters.splice(idx, 1)
+          }
+        }, [])
+        mutedFlag = muted
+        const title = muted ? t.bellOffTitle : t.bellOnTitle
+        const label = muted ? t.mutedLabel : t.muteLabel
+        if (!wide) {
+          return React.createElement('button', {
+            className: 'ln-side-circle' + (muted ? ' ln-side-btn-muted' : ''),
+            onClick: function () { setMuted(function (m) { return !m }) },
+            title,
+            'aria-label': muted ? t.bellOffAria : t.bellOnAria,
+          }, muted ? '🔕' : '🔔')
+        }
+        return React.createElement('button', {
+          className: 'ln-side-btn' + (muted ? ' ln-side-btn-muted' : ''),
+          onClick: function () { setMuted(function (m) { return !m }) },
+          title,
+          'aria-label': muted ? t.bellOffAria : t.bellOnAria,
+        },
+          React.createElement('span', { className: 'ln-side-icon' }, muted ? '🔕' : '🔔'),
+          React.createElement('span', { className: 'ln-side-label' }, label),
         )
       },
     ))
