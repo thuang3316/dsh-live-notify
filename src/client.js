@@ -138,7 +138,7 @@ return {
       }
       /* Narrow windows: the centered composer (max 812px) reaches into the
          bottom-right corner — lift the controls above the input area. */
-      @media (max-width: 1280px) {
+      @media (max-width: 1480px) {
         .ln-live-root { bottom: 150px; right: 16px; }
       }
       @media (max-width: 520px) {
@@ -155,6 +155,8 @@ return {
     let lastDropAt = null
     let lastHintAt = 0
     let lastAwayFlag = null
+    let resizing = false
+    let resizeDisposer = null
     const unread = new Map()
 
     function fmtTime(ts) {
@@ -290,6 +292,7 @@ return {
         }
 
         function pollOnce() {
+          if (resizing) return
           const away = isAway()
           const returning = away !== true && lastAwayFlag === true
           lastAwayFlag = away
@@ -324,7 +327,27 @@ return {
 
         React.useEffect(function pollEffect() {
           pollOnce()
-          return ctx.interval(pollOnce, 500)
+          return ctx.interval(pollOnce, 1000)
+        }, [])
+
+        function onWindowResize() {
+          resizing = true
+          if (resizeDisposer !== null) resizeDisposer()
+          resizeDisposer = ctx.timeout(function () {
+            resizing = false
+            resizeDisposer = null
+            pollOnce()
+          }, 300)
+        }
+
+        React.useEffect(function resizeEffect() {
+          if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return
+          window.addEventListener('resize', onWindowResize)
+          return function () {
+            window.removeEventListener('resize', onWindowResize)
+            if (resizeDisposer !== null) { resizeDisposer(); resizeDisposer = null }
+            resizing = false
+          }
         }, [])
 
         React.useEffect(function visibilityEffect() {
@@ -347,6 +370,7 @@ return {
 
         React.useEffect(function sweepEffect() {
           return ctx.interval(function sweep() {
+            if (resizing) return
             setToasts(function (prev) {
               if (prev.length === 0) return prev
               const now = Date.now()
@@ -365,7 +389,7 @@ return {
               if (!changed && next.length === prev.length) return prev
               return next
             })
-          }, 250)
+          }, 500)
         }, [])
 
         function onEnter(t) {
