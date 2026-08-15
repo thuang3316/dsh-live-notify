@@ -6,7 +6,7 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) dynamic Co
 
 The UI language follows the harness language setting (English / 中文) and all colors use the harness theme tokens, adapting to light and dark themes.
 
-![Live notifications in the page (light theme)](./assets/toast-en.png)
+![Toasts and composer controls (light theme)](./assets/real-en.png)
 
 ## Features
 

@@ -6,7 +6,7 @@
 
 界面文案跟随 harness 语言设置(English / 中文),配色全部使用 harness 主题 token,明暗主题自适应。
 
-![页面内通知(浅色主题)](./assets/toast-zh.png)
+![页面内通知与输入框控件(浅色主题)](./assets/real-en.png)
 
 ## 功能
 
