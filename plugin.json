@@ -1,0 +1,11 @@
+{
+  "idPrefix": "livnot",
+  "name": "Live Notification Toasts",
+  "purpose": "页面右下角弹出回合完成/出错 toast(主题化),离开页面时补发系统通知,带状态胶囊与静音开关。",
+  "version": "1.10.0",
+  "platforms": ["host", "client"],
+  "files": {
+    "host": "src/host.js",
+    "client": "src/client.js"
+  }
+}
